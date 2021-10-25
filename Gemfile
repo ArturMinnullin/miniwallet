@@ -6,4 +6,8 @@ source 'https://rubygems.org'
 
 gem 'bitcoin-ruby'
 
-gem 'rspec', group: :development
+group :development do
+  gem 'rspec'
+  gem 'pry'
+  gem 'webmock'
+end
