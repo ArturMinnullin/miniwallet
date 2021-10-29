@@ -3,8 +3,6 @@
 require 'bundler'
 require 'pry'
 require 'bitcoin'
-require 'net/http';
-require 'json';
 require 'warning'
 require_relative 'lib/miniwallet'
 
@@ -38,11 +36,10 @@ when 'balance'
   puts "Balance: #{sprintf('%0.10f', balance)} ฿T"
 when 'send'
   address = ARGV[0]
-  value = ARGV[1].to_f
-  # tb1ql7w62elx9ucw4pj5lgw4l028hmuw80sndtntxt
+  amount = ARGV[1].to_f
 
-  tx_id = MiniWallet::Sender.new(privkey, address).send(value)
-  puts "#{sprintf('%0.10f', value)} sent to address: #{tx_id}"
+  tx_id = Miniwallet::Sender.new(privkey, address).send(amount)
+  puts "#{sprintf('%0.10f', amount)} ฿T sent to address #{address}: #{tx_id}"
 else
   puts 'Error: Wrong command'
 end

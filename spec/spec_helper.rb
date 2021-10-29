@@ -7,4 +7,4 @@ end
 Bundler.setup
 WebMock.disable_net_connect!
 
-Dir[File.expand_path(File.join('lib', '*.rb'))].each(&method(:require))
+Dir[File.expand_path(File.join('lib', 'miniwallet' '*.rb'))].each(&method(:require))

@@ -1,3 +1,5 @@
+require 'bitcoin'
+
 module Miniwallet
   class Balance
     attr_reader :address
@@ -7,15 +9,10 @@ module Miniwallet
     end
 
     def get
-      values = get_txouts.select { |o| o['scriptpubkey_address'] == address }
-      values.sum { |v| v['value'] } / SATOSHIS_PER_BITCOIN
-    end
+      txs = Miniwallet::Transaction.new(address).unspent_tx_list
+      total = txs.filter_map { |o| o['value'] if o['status']['confirmed'] }.sum
 
-    private
-
-    def get_txouts
-      txs = Miniwallet::Transaction.new(address).list
-      txs.filter_map { |o| o['vout'] if o['status']['confirmed'] }.flatten.uniq
+      total / SATOSHIS_PER_BITCOIN
     end
   end
 end

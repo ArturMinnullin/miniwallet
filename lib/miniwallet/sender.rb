@@ -1,4 +1,4 @@
-module MiniWallet
+module Miniwallet
   class Sender
     attr_reader :key, :to_address
 
@@ -7,16 +7,24 @@ module MiniWallet
       @to_address = to_address
     end
 
-    def send(value)
-      balance = Miniwallet::Balance.new(key.priv).get
-      raise 'Error: balance is lower than transaction value' if balance < value
-
+    def send(amount)
       transaction = Miniwallet::Transaction.new(key.addr)
-      prev_tx = Bitcoin::P::Tx.new(transaction.last)
-      prev_out_index = 0
+      inputs = get_inputs(transaction)
+      if inputs.sum(&:amount) < amount + Miniwallet::Transaction::FEE
+        raise 'Error: balance is lower than transaction value'
+      end
 
-      tx = transaction.build(to_address, value, prev_tx, prev_out_index, key)
-      JSON.parse(tx.to_json)['hash']
+      tx = transaction.build(to: to_address, amount: amount, inputs: inputs, key: key)
+      tx.hash
+    end
+
+    private
+
+    def get_inputs(transaction)
+      @inputs ||= transaction.unspent_tx_list.map do |t|
+        tx = transaction.get_binary_by_id(t['txid'])
+        OpenStruct.new(obj: Bitcoin::P::Tx.new(tx), index: t['vout'], amount: t['value'])
+      end
     end
   end
 end
