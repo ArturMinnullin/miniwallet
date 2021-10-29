@@ -1,20 +1,12 @@
-require 'uri'
-require 'net/http'
-require 'json'
-
 module Miniwallet
   class Balance
-    def self.get
-      new.call
-    end
-
     attr_reader :address
 
-    def initialize
-      @address = "tb1q0v47kzs36at4r43n7m0pukc6zmrftulelz32azlda76avycf6vwqj5wtm2"
+    def initialize(privkey)
+      @address = Bitcoin::Key.new(privkey).addr
     end
 
-    def call
+    def get
       values = get_txouts.select { |o| o['scriptpubkey_address'] == address }
       values.sum { |v| v['value'] } / SATOSHIS_PER_BITCOIN
     end
