@@ -18,7 +18,7 @@ module Miniwallet
 
     def unspent_tx_list
       res = Net::HTTP.get_response(URI("#{ESPLORA_API_BASE}/address/#{address}/utxo"))
-      return [] unless res.is_a?(Net::HTTPSuccess)
+      raise "Can't fetch utxo" unless res.is_a?(Net::HTTPSuccess)
 
       JSON.parse(res.body)
     end
@@ -29,6 +29,19 @@ module Miniwallet
     end
 
     def create(to:, amount:, inputs:, key:)
+      tx = build_tx_with_fee(to: to, amount: amount, inputs: inputs, key: key)
+      minimum_fee = tx.calculate_minimum_fee
+
+      new_tx = build_tx_with_fee(to: to, amount: amount, inputs: inputs, key: key, fee: minimum_fee)
+      req = Net::HTTP.post(
+        URI("#{ESPLORA_API_BASE}/tx"), new_tx.payload.unpack("H*").first, 'Content-Type' => 'application/json'
+      )
+      req.body
+    end
+
+    private
+
+    def build_tx_with_fee(to:, amount:, inputs:, key:, fee: FEE)
       new_tx = build_tx do |t|
         inputs.each do |input|
           t.input do |i|
@@ -44,17 +57,14 @@ module Miniwallet
         end
 
         unspents_total = inputs.sum(&:amount) / SATOSHIS_PER_BITCOIN
-        change = unspents_total - (amount + FEE)
-        t.output do |o|
-          o.value change * SATOSHIS_PER_BITCOIN
-          o.script { |s| s.recipient address }
+        change = unspents_total - (amount + fee)
+        if change > 0
+          t.output do |o|
+            o.value change * SATOSHIS_PER_BITCOIN
+            o.script { |s| s.recipient address }
+          end
         end
       end
-
-      req = Net::HTTP.post(
-        URI("#{ESPLORA_API_BASE}/tx"), new_tx.payload.unpack("H*").first, 'Content-Type' => 'application/json'
-      )
-      req.body
     end
   end
 end

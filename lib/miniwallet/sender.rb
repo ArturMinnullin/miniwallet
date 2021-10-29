@@ -14,7 +14,7 @@ module Miniwallet
         raise 'Error: balance is lower than transaction value'
       end
 
-      tx = transaction.build(to: to_address, amount: amount, inputs: inputs, key: key)
+      tx = transaction.create(to: to_address, amount: amount, inputs: inputs, key: key)
       tx.hash
     end
 
