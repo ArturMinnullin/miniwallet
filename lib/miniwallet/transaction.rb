@@ -5,7 +5,6 @@ require 'json';
 module Miniwallet
   class Transaction
     ESPLORA_API_BASE = 'https://blockstream.info/testnet/api'
-    TXS_PER_PAGE = 25
     FEE = 0.0001
 
     include Bitcoin::Builder
